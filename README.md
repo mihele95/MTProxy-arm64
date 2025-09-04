@@ -19,6 +19,7 @@ curl -OL https://www.openssl.org/source/old/1.0.2/openssl-1.0.2u.tar.gz \
     && make -j$(nproc) \
     && make install
 
+cd ..
 make -j$(nproc)
 ```
 
