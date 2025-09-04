@@ -19,12 +19,14 @@
 */
 
 #include <assert.h>
-#include <cpuid.h>
 
 #include "cpuid.h"
 
-
 #define CPUID_MAGIC 0x280147b8
+
+#if defined(__x86_64__) || defined(__i386__)
+
+#include <cpuid.h>
 
 kdb_cpuid_t *kdb_cpuid (void) {
   static kdb_cpuid_t cached = { .magic = 0 };
@@ -46,3 +48,14 @@ kdb_cpuid_t *kdb_cpuid (void) {
   cached.magic = CPUID_MAGIC;
   return &cached;
 }
+#else
+kdb_cpuid_t *kdb_cpuid (void) {
+  static kdb_cpuid_t cached = { .magic = 0, .ebx = 0, .ecx = 0, .edx = 0 };
+  if (cached.magic) {
+    assert (cached.magic == CPUID_MAGIC);
+    return &cached;
+  }
+  cached.magic = CPUID_MAGIC;
+  return &cached;
+}
+#endif

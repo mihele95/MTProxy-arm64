@@ -4,16 +4,13 @@ EXE = ${OBJ}/bin
 
 COMMIT := $(shell git log -1 --pretty=format:"%H")
 
-ARCH =
-ifeq ($m, 32)
-ARCH = -m32
-endif
-ifeq ($m, 64)
-ARCH = -m64
-endif
+ARCH = -march=armv8-a
 
-CFLAGS = $(ARCH) -O3 -std=gnu11 -Wall -mpclmul -march=core2 -mfpmath=sse -mssse3 -fno-strict-aliasing -fno-strict-overflow -fwrapv -DAES=1 -DCOMMIT=\"${COMMIT}\" -D_GNU_SOURCE=1 -D_FILE_OFFSET_BITS=64
-LDFLAGS = $(ARCH) -ggdb -rdynamic -lm -lrt -lcrypto -lz -lpthread -lcrypto
+SSL_STATIC_PATH = /usr/local/openssl-static
+
+CFLAGS = $(ARCH) -O3 -std=gnu11 -Wall -fno-strict-aliasing -fno-strict-overflow -fwrapv -DAES=1 -DCOMMIT=\"${COMMIT}\" -D_GNU_SOURCE=1 -D_FILE_OFFSET_BITS=64 -I$(SSL_STATIC_PATH)/include
+
+LDFLAGS = $(ARCH) -static -ggdb -lm -lrt -lz -lpthread -L$(SSL_STATIC_PATH)/lib -lcrypto -lssl -ldl -latomic
 
 LIB = ${OBJ}/lib
 CINCLUDE = -iquote common -iquote .
@@ -26,20 +23,17 @@ OBJDIRS := ${OBJ} $(addprefix ${OBJ}/,${PROJECTS}) ${EXE} ${LIB}
 DEPDIRS := ${DEP} $(addprefix ${DEP}/,${PROJECTS})
 ALLDIRS := ${DEPDIRS} ${OBJDIRS}
 
-
 .PHONY:	all clean 
 
 EXELIST	:= ${EXE}/mtproto-proxy
 
-
 OBJECTS	=	\
   ${OBJ}/mtproto/mtproto-proxy.o ${OBJ}/mtproto/mtproto-config.o ${OBJ}/net/net-tcp-rpc-ext-server.o
 
-DEPENDENCE_CXX		:=	$(subst ${OBJ}/,${DEP}/,$(patsubst %.o,%.d,${OBJECTS_CXX}))
-DEPENDENCE_STRANGE	:=	$(subst ${OBJ}/,${DEP}/,$(patsubst %.o,%.d,${OBJECTS_STRANGE}))
 DEPENDENCE_NORM	:=	$(subst ${OBJ}/,${DEP}/,$(patsubst %.o,%.d,${OBJECTS}))
 
 LIB_OBJS_NORMAL := \
+	${OBJ}/common/randr_compat.o \
 	${OBJ}/common/crc32c.o \
 	${OBJ}/common/pid.o \
 	${OBJ}/common/sha1.o \
@@ -63,13 +57,13 @@ LIB_OBJS_NORMAL := \
 	${OBJ}/net/net-thread.o ${OBJ}/net/net-stats.o ${OBJ}/common/proc-stat.o \
 	${OBJ}/common/kprintf.o \
 	${OBJ}/common/precise-time.o ${OBJ}/common/cpuid.o \
-	${OBJ}/common/server-functions.o ${OBJ}/common/crc32.o \
+	${OBJ}/common/server-functions.o ${OBJ}/common/crc32.o
 
 LIB_OBJS := ${LIB_OBJS_NORMAL}
 
 DEPENDENCE_LIB	:=	$(subst ${OBJ}/,${DEP}/,$(patsubst %.o,%.d,${LIB_OBJS}))
 
-DEPENDENCE_ALL		:=	${DEPENDENCE_NORM} ${DEPENDENCE_STRANGE} ${DEPENDENCE_LIB}
+DEPENDENCE_ALL		:=	${DEPENDENCE_NORM} ${DEPENDENCE_LIB}
 
 OBJECTS_ALL		:=	${OBJECTS} ${LIB_OBJS}
 
@@ -100,4 +94,3 @@ clean:
 	rm -rf ${OBJ} ${DEP} ${EXE} || true
 
 force-clean: clean
-
