@@ -1,3 +1,27 @@
+# Changelog from the Original Repository
+
+- Applied `arm.patch` from [D13410N3/MTProxyARMPatch](https://github.com/D13410N3/MTProxyARMPatch)
+- Applied `crc32c.c` from [GetPageSpeed/MTProxy](https://github.com/GetPageSpeed/MTProxy)
+- Applied `crc32c.patch` from [vdchuyen/MTProxyARMPatch](https://github.com/vdchuyen/MTProxyARMPatch)
+- Applied `randr_compat.patch` from [alexdoesh/mtproxy](https://github.com/alexdoesh/mtproxy)
+- Replaced `__sync_bool_compare_and_swap` with `__atomic_compare_exchange_n` for ARM64 compatibility
+- Added static OpenSSL library (`openssl-1.0.2u`)
+
+Works on all AArch64 systems (musl/glibc)
+
+## Local build
+
+```
+curl -OL https://www.openssl.org/source/old/1.0.2/openssl-1.0.2u.tar.gz \
+    && tar -xzf openssl-1.0.2u.tar.gz \
+    && cd openssl-1.0.2u \
+    && ./config no-shared no-zlib --prefix=/usr/local/openssl-static \
+    && make -j$(nproc) \
+    && make install
+
+make -j$(nproc)
+```
+
 # MTProxy
 Simple MT-Proto proxy
 

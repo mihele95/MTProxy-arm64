@@ -298,21 +298,21 @@ mqn_value_t mpq_block_pop (struct mp_queue_block *QB) {
 	if (idx == h) {
 	  e.idx = safe_idx + size;
 	  e.val = 0;
-	  if (__sync_bool_compare_and_swap (&node->pair, d.pair, e.pair)) {
+	  if (__atomic_compare_exchange_n(&node->pair, &d.pair, e.pair, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)) {
 	    // fprintf (stderr, "%d:  mpq_block_pop(%ld) -> %lx\n", mpq_this_thread_id, h, (long) val);
 	    return val;
 	  }
 	} else {
 	  e.val = val;
 	  e.idx = idx; // clear 'safe' flag
-	  if (__sync_bool_compare_and_swap (&node->pair, d.pair, e.pair)) {
+	  if (__atomic_compare_exchange_n(&node->pair, &d.pair, e.pair, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)) {
 	    break;
 	  }
 	}
       } else {
 	e.idx = (safe_idx & MQN_SAFE) + h + size;
 	e.val = 0;
-	if (__sync_bool_compare_and_swap (&node->pair, d.pair, e.pair)) {
+	if (__atomic_compare_exchange_n(&node->pair, &d.pair, e.pair, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)) {
 	  break;
 	}
       }
@@ -352,7 +352,7 @@ long mpq_block_push (struct mp_queue_block *QB, mqn_value_t val) {
       d.val = 0;
       e.idx = MQN_SAFE + t;
       e.val = val;
-      if (__sync_bool_compare_and_swap (&node->pair, d.pair, e.pair)) {
+      if (__atomic_compare_exchange_n(&node->pair, &d.pair, e.pair, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)) {
 	// fprintf (stderr, "%d:  mpq_block_push(%ld) <- %lx\n", mpq_this_thread_id, t, (long) val);
 	return t; // pushed OK
       }
